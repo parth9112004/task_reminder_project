@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import DashSidebar from './dash_sidebar';
-import DashNavbar from './dash_navbar';
-import DashboardPage from '../dashboard_content/dashboard_page';
-import TaskPage from '../dashboard_content/task_page/TaskPage';
-import CalendarPage from '../dashboard_content/calendar_page/CalendarPage';
+import Sidebar from '../Sidebar/Sidebar';
+import Navbar from '../Navbar/Navbar';
+import Dashboard from '../Dashboard/Dashboard';
+import Task from '../Task/Task';
+import Calendar from '../Calendar/Calendar';
 import '../../style/user_dashboard.css';
 import { FiX, FiInfo, FiCheckCircle } from 'react-icons/fi';
 
@@ -79,7 +79,7 @@ const UserDashboard = ({ onLogout }) => {
 
   return (
     <div className="dashboard-layout">
-      <DashSidebar 
+      <Sidebar 
         isOpen={isSidebarOpen} 
         closeSidebar={closeSidebar} 
         onLogout={onLogout} 
@@ -88,7 +88,7 @@ const UserDashboard = ({ onLogout }) => {
         openTaskPanel={openTaskPanel}
       />
       <div className="main-content-wrapper">
-        <DashNavbar 
+        <Navbar 
           toggleSidebar={toggleSidebar} 
           onLogout={onLogout} 
           user={userProfile} 
@@ -98,14 +98,14 @@ const UserDashboard = ({ onLogout }) => {
         />
         <main className="main-content">
           {activeView === 'dashboard' ? (
-            <DashboardPage user={userProfile} />
+            <Dashboard user={userProfile} />
           ) : activeView === 'tasks' ? (
-            <TaskPage 
+            <Task 
               isPanelOpen={isTaskPanelOpen} 
               setIsPanelOpen={setIsTaskPanelOpen} 
             />
           ) : activeView === 'calendar' ? (
-            <CalendarPage />
+            <Calendar />
           ) : (
             <div className="empty-view-placeholder">
               <h2 style={{ padding: '40px', textAlign: 'center' }}>{activeView.charAt(0).toUpperCase() + activeView.slice(1)} View coming soon...</h2>

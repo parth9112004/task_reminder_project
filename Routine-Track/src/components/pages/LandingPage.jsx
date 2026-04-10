@@ -10,7 +10,7 @@ import {
     User,
     ArrowRight
 } from 'lucide-react';
-import '../style/LandingPage.css';
+import '../../style/LandingPage.css';
 
 const LandingPage = ({ onLogin }) => {
     const [isRegistering, setIsRegistering] = useState(false);

@@ -1,5 +1,5 @@
 import React from 'react';
-import './modals.css';
+import '../../style/modals.css';
 
 /**
  * DeleteModal Component

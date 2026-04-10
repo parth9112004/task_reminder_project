@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiCheck } from 'react-icons/fi';
-import './modals.css';
+import '../../style/modals.css';
 
 /**
  * SuccessModal Component

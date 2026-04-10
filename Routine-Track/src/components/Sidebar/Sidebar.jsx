@@ -9,7 +9,7 @@ import {
   FiLogOut 
 } from 'react-icons/fi';
 
-const DashSidebar = ({ isOpen, closeSidebar, onLogout, activeView, setActiveView, openTaskPanel }) => {
+const Sidebar = ({ isOpen, closeSidebar, onLogout, activeView, setActiveView, openTaskPanel }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <FiHome className="menu-icon" /> },
     { id: 'tasks', label: 'Tasks', icon: <FiCheckSquare className="menu-icon" /> },
@@ -66,4 +66,4 @@ const DashSidebar = ({ isOpen, closeSidebar, onLogout, activeView, setActiveView
   );
 };
 
-export default DashSidebar;
+export default Sidebar;

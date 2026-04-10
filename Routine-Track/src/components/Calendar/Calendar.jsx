@@ -10,7 +10,7 @@ import {
   FiLink,
   FiZap
 } from 'react-icons/fi';
-import './calendar-styles.css';
+import '../../style/Calendar.css';
 
 const AvatarStack = ({ count = 3 }) => {
   const avatars = [
@@ -28,7 +28,7 @@ const AvatarStack = ({ count = 3 }) => {
   );
 };
 
-const CalendarPage = () => {
+const Calendar = () => {
   return (
     <div className="calendar-page-container">
       {/* LEFT SIDEBAR */}
@@ -176,4 +176,4 @@ const CalendarPage = () => {
   );
 };
 
-export default CalendarPage;
+export default Calendar;

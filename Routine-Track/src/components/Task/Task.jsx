@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { FiSearch } from 'react-icons/fi';
-import TaskList from './components/TaskList';
-import TaskPanel from './components/TaskPanel';
-import DeleteModal from './components/DeleteModal';
-import SuccessModal from './components/SuccessModal';
-import { taskApi } from './task-api';
-import './task-styles.css';
+import TaskList from './TaskList';
+import TaskPanel from './TaskPanel';
+import DeleteModal from './DeleteModal';
+import SuccessModal from './SuccessModal';
+import { taskApi } from '../../api/api';
+import '../../style/Task.css';
 
 /**
  * TaskPage Main Component
  */
-const TaskPage = ({ isPanelOpen, setIsPanelOpen }) => {
+const Task = ({ isPanelOpen, setIsPanelOpen }) => {
   const [tasks, setTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -123,4 +123,4 @@ const TaskPage = ({ isPanelOpen, setIsPanelOpen }) => {
   );
 };
 
-export default TaskPage;
+export default Task;

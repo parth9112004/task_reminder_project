@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import LandingPage from './component/LandingPage'
-import Dashboard from './component/dashboard_panel/user_dash_board'
+import LandingPage from './components/pages/LandingPage'
+import Dashboard from './components/pages/Home'
 import './index.css'
 
 function App() {

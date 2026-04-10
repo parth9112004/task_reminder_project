@@ -11,9 +11,9 @@ import {
   FiGrid, 
   FiList 
 } from 'react-icons/fi';
-import './dashboard_page.css';
+import '../../style/Dashboard.css';
 
-const DashboardPage = ({ user }) => {
+const Dashboard = ({ user }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -267,4 +267,4 @@ const DashboardPage = ({ user }) => {
   );
 };
 
-export default DashboardPage;
+export default Dashboard;

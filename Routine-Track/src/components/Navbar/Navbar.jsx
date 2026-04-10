@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiSearch, FiBell, FiSettings, FiMenu } from 'react-icons/fi';
 import AccountDropdown from './AccountDropdown';
 
-const DashNavbar = ({ toggleSidebar, onLogout, user, setUser, showToast, activeView }) => {
+const Navbar = ({ toggleSidebar, onLogout, user, setUser, showToast, activeView }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
@@ -100,4 +100,4 @@ const DashNavbar = ({ toggleSidebar, onLogout, user, setUser, showToast, activeV
   );
 };
 
-export default DashNavbar;
+export default Navbar;
