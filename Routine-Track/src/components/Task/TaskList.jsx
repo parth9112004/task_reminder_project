@@ -5,7 +5,7 @@ import TaskCard from './TaskCard';
  * TaskList Component
  * Renders a list area for tasks
  */
-const TaskList = ({ tasks, onTaskClick, onDeleteTask }) => {
+const TaskList = ({ title, tasks, onTaskClick, onDeleteTask, onUpdateStatus, onToggleFavourite }) => {
   if (tasks.length === 0) {
     return (
       <div className="empty-state">
@@ -19,7 +19,7 @@ const TaskList = ({ tasks, onTaskClick, onDeleteTask }) => {
   return (
     <div className="task-list-v2">
       <div className="list-group">
-        <h4 className="list-title">Today's Tasks</h4>
+        <h4 className="list-title-v2">{title}</h4>
         <div className="list-items">
           {tasks.map(task => (
             <TaskCard 
@@ -27,6 +27,8 @@ const TaskList = ({ tasks, onTaskClick, onDeleteTask }) => {
               task={task} 
               onEdit={onTaskClick} 
               onDelete={onDeleteTask}
+              onUpdateStatus={onUpdateStatus}
+              onToggleFavourite={onToggleFavourite}
             />
           ))}
         </div>

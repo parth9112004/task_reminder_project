@@ -9,16 +9,71 @@ import {
   FiEdit3, 
   FiPlus, 
   FiGrid, 
-  FiList 
+  FiList,
+  FiArrowRight,
+  FiChevronDown,
+  FiCheck
 } from 'react-icons/fi';
+import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
+import { taskApi } from '../../api/api';
 import '../../style/Dashboard.css';
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, setActiveView }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, in_progress: 0 });
+  const [todayTasks, setTodayTasks] = useState([]);
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [projectView, setProjectView] = useState('grid');
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [noteContent, setNoteContent] = useState('');
+  const [isNoteMenuOpen, setIsNoteMenuOpen] = useState(false);
+  const noteRef = React.useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const statsData = await taskApi.getStats();
+        setStats({
+          total: statsData.total ?? 0,
+          completed: statsData.done ?? 0,
+          pending: statsData.pending ?? 0,
+          in_progress: statsData.in_progress ?? 0
+        });
+
+        const allTasks = await taskApi.getTasks();
+        setTodayTasks(allTasks.slice(0, 3));
+
+        // Get live in_progress tasks for the "Active Projects" section
+        const inProgressTasks = await taskApi.getTasks('In Progress');
+        // Add dummy avatars to each task to match the design requested
+        const mappedProjects = inProgressTasks.map((task, idx) => ({
+          ...task,
+          members: [
+            `https://i.pravatar.cc/150?u=${idx + 1}`,
+            `https://i.pravatar.cc/150?u=${idx + 10}`,
+            `https://i.pravatar.cc/150?u=${idx + 20}`
+          ].slice(0, (idx % 3) + 1)
+        }));
+        setActiveProjects(mappedProjects);
+
+        const weekly = await taskApi.getWeeklyStats();
+        setWeeklyData(weekly);
+
+        const note = await taskApi.getNote();
+        setNoteContent(note.content || '');
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDashboardData();
   }, []);
 
   const formatDate = (date) => {
@@ -35,49 +90,54 @@ const Dashboard = ({ user }) => {
   };
 
   const summaryCards = [
-    { title: 'TOTAL TASKS', value: 42, icon: <FiList />, color: '#6366f1' },
-    { title: 'COMPLETED', value: 28, icon: <FiCheckCircle />, color: '#10b981' },
-    { title: 'PENDING', value: 14, icon: <FiClock />, color: '#f59e0b' },
-    { title: 'PROJECTS', value: 6, icon: <FiBriefcase />, color: '#8b5cf6' },
+    { title: 'TOTAL TASKS', value: stats.total, icon: <FiList />, color: '#6366f1' },
+    { title: 'COMPLETED', value: stats.completed, icon: <FiCheckCircle />, color: '#10b981' },
+    { title: 'PENDING', value: stats.pending, icon: <FiClock />, color: '#f59e0b' },
+    { title: 'IN PROGRESS', value: stats.in_progress, icon: <FiTrendingUp />, color: '#3b82f6' },
   ];
 
-  const todayTasks = [
-    { id: 1, title: 'Finalize Design System v2', time: '09:00 AM - 11:00 AM', status: 'IN PROGRESS', priority: 'medium' },
-    { id: 2, title: 'Client Stakeholder Meeting', time: '01:30 PM - 02:30 PM', status: 'HIGH PRIORITY', priority: 'high' },
-    { id: 3, title: 'Draft Q4 Strategy Report', time: '08:00 AM - 09:00 AM', status: 'DONE', priority: 'low' },
-  ];
 
-  const activeProjects = [
-    { 
-      id: 1, 
-      title: 'Brand Identity Redesign', 
-      team: 'Internal Marketing Team', 
-      progress: 75,
-      members: ['https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2', 'https://i.pravatar.cc/150?u=3']
-    },
-    { 
-      id: 2, 
-      title: 'Web Architecture Refactor', 
-      team: 'Engineering Division', 
-      progress: 32,
-      members: ['https://i.pravatar.cc/150?u=4']
-    }
-  ];
 
   const upcomingDeadlines = [
     { id: 1, title: 'Product Launch Deck', subtitle: 'Marketing Campaign', remaining: '2 days left', type: 'urgent' },
     { id: 2, title: 'API Integration Sync', subtitle: 'Web Architecture', remaining: '5 days left', type: 'normal' },
   ];
 
-  const weeklyData = [
-    { day: 'M', value: 40 },
-    { day: 'T', value: 60 },
-    { day: 'W', value: 45 },
-    { day: 'T', value: 90 },
-    { day: 'F', value: 30 },
-    { day: 'S', value: 20 },
-    { day: 'S', value: 10 },
-  ];
+  // Helper to get color based on progress percentage
+  const getProgressColor = (percent) => {
+    if (percent < 30) return '#ef4444'; // Red
+    if (percent < 50) return '#3b82f6'; // Blue
+    if (percent < 70) return '#f59e0b'; // Orange
+    return '#10b981'; // Green
+  };
+
+  // Note Handlers
+  const handleSaveNote = async () => {
+    try {
+      await taskApi.saveNote(noteContent);
+      setIsNoteMenuOpen(false);
+    } catch (err) {
+      console.error("Failed to save note:", err);
+    }
+  };
+
+  const handleDeleteNote = async () => {
+    try {
+      await taskApi.deleteNote();
+      setNoteContent('');
+      setIsNoteMenuOpen(false);
+    } catch (err) {
+      console.error("Failed to delete note:", err);
+    }
+  };
+
+  const handleEditNote = () => {
+    if (noteRef.current) {
+      noteRef.current.focus();
+    }
+    setIsNoteMenuOpen(false);
+  };
+  const maxVal = Math.max(...weeklyData.map(d => d.total), 0);
 
   return (
     <div className="dashboard-page-container">
@@ -114,17 +174,19 @@ const Dashboard = ({ user }) => {
           {/* Today's Tasks */}
           <section className="dashboard-section tasks-section">
             <div className="section-header">
-              <h2>Today's Tasks</h2>
-              <button className="view-all-btn">View All</button>
+              <h2>All Task</h2>
+              <button className="view-all-btn" onClick={() => setActiveView('tasks')}>
+                View All <FiArrowRight className="arrow-icon" />
+              </button>
             </div>
             <div className="task-list">
-              {todayTasks.map(task => (
-                <div key={task.id} className={`task-item priority-${task.priority}`}>
+              {todayTasks.length > 0 ? todayTasks.map(task => (
+                <div key={task.id} className={`task-item status-${task.status.toLowerCase().replace(' ', '-')}`}>
                   <div className="task-left">
                     <div className="priority-border"></div>
                     <div className="task-main-info">
                       <h3>{task.title}</h3>
-                      <span>{task.time}</span>
+                      <span>{task.time || 'No time set'}</span>
                     </div>
                   </div>
                   <div className="task-right">
@@ -133,7 +195,9 @@ const Dashboard = ({ user }) => {
                     </span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div style={{ color: '#64748b', fontSize: '14px', fontStyle: 'italic', padding: '10px 0' }}>No tasks found for today.</div>
+              )}
             </div>
           </section>
 
@@ -141,40 +205,57 @@ const Dashboard = ({ user }) => {
           <section className="dashboard-section projects-section">
             <div className="section-header">
               <h2>Active Projects</h2>
-              <div className="view-toggles">
-                <button className="toggle-btn active"><FiGrid /></button>
-                <button className="toggle-btn"><FiList /></button>
+              <div className="view-toggles-modern">
+                <button 
+                  className={`toggle-btn-premium ${projectView === 'grid' ? 'active' : ''}`}
+                  onClick={() => setProjectView('grid')}
+                >
+                  <FiGrid />
+                </button>
+                <button 
+                  className={`toggle-btn-premium ${projectView === 'list' ? 'active' : ''}`}
+                  onClick={() => setProjectView('list')}
+                >
+                  <FiList />
+                </button>
               </div>
             </div>
-            <div className="project-grid">
+            <div className={`project-display-container ${projectView}-view`}>
               {activeProjects.map(project => (
-                <div key={project.id} className="project-card">
-                  <div className="project-card-header">
+                <div key={project.id} className="project-card-premium">
+                  <div className="project-meta-info">
                     <div className="project-title-group">
                       <h3>{project.title}</h3>
-                      <p>{project.team}</p>
+                      <p className="project-desc-line">{project.description || 'Current active objective'}</p>
                     </div>
-                    <div className="team-avatars">
+                    <div className="team-avatars-group">
                       {project.members.map((avatar, i) => (
-                        <img key={i} src={avatar} alt="Team" className="team-avatar" />
+                        <img key={i} src={avatar} alt="Team" className="team-avatar-premium" />
                       ))}
-                      {project.members.length > 3 && <span className="avatar-more">+{project.members.length - 3}</span>}
+                      {project.members?.length > 3 && <span className="avatar-more-pill">+{project.members.length - 3}</span>}
                     </div>
                   </div>
                   <div className="project-progress">
-                    <div className="progress-label">
-                      <span>Progress</span>
-                      <span>{project.progress}%</span>
+                    <div className="project-progress-header">
+                      <span>Progress {project.progress || 0}%</span>
                     </div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: `${project.progress}%` }}></div>
+                    <div className="progress-bar-container">
+                      <div 
+                        className="progress-bar-fill" 
+                        style={{ 
+                          width: `${project.progress || 0}%`,
+                          backgroundColor: getProgressColor(project.progress || 0)
+                        }}
+                      ></div>
                     </div>
                   </div>
                 </div>
               ))}
-              <div className="add-project-btn">
-                <FiPlus />
-              </div>
+              {activeProjects.length === 0 && (
+                <div className="empty-projects-state">
+                  <p>No active projects at the moment.</p>
+                </div>
+              )}
             </div>
           </section>
 
@@ -203,15 +284,33 @@ const Dashboard = ({ user }) => {
             <section className="dashboard-section notes-section">
               <div className="section-header">
                 <h2>Quick Notes</h2>
-                <FiMoreVertical className="more-icon" />
-              </div>
-              <div className="notes-container">
-                <textarea placeholder="Type your thoughts here..."></textarea>
-                <div className="notes-footer">
-                  <button className="save-note-btn">
-                    <FiCalendar style={{ marginRight: '6px' }} /> Save Note
-                  </button>
+                <div className="note-menu-container">
+                  <FiMoreVertical 
+                    className="more-icon-btn" 
+                    onClick={() => setIsNoteMenuOpen(!isNoteMenuOpen)}
+                  />
+                  {isNoteMenuOpen && (
+                    <div className="note-dropdown-active">
+                      <button onClick={handleEditNote}>
+                        <FiEdit3 /> Edit
+                      </button>
+                      <button onClick={handleSaveNote}>
+                        <FiCheckCircle /> Save
+                      </button>
+                      <button onClick={handleDeleteNote} className="delete-opt">
+                        <FiClock /> Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
+              </div>
+              <div className="notes-container-premium">
+                <textarea 
+                  ref={noteRef}
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  placeholder="Capture your immediate thoughts, reminders, or scratchpad items here..."
+                ></textarea>
               </div>
             </section>
           </div>
@@ -222,43 +321,90 @@ const Dashboard = ({ user }) => {
           {/* Weekly Progress */}
           <section className="dashboard-section weekly-progress">
             <div className="section-header">
-              <h2>Weekly Progress</h2>
+              <div className="header-title-group">
+                <h2>Weekly Progress</h2>
+                <p className="chart-subtitle">Output compared to last session</p>
+              </div>
+              <div className="status-badge-green">
+                <FiTrendingUp size={14} /> <span>+12.5%</span>
+              </div>
             </div>
-            <div className="chart-container">
-              {weeklyData.map((data, i) => (
-                <div key={i} className="chart-bar-wrapper">
-                  <div 
-                    className={`chart-bar ${data.value > 80 ? 'active' : ''}`} 
-                    style={{ height: `${data.value}%` }}
-                  ></div>
-                  <span>{data.day}</span>
-                </div>
-              ))}
+            <div className="chart-container-modern" style={{ height: '260px', width: '100%', minHeight: '260px' }}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+                <BarChart data={weeklyData} margin={{ top: 20, right: 10, left: 10, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 13, fontWeight: 600 }}
+                    dy={12}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar 
+                    dataKey="total" 
+                    radius={[20, 20, 20, 20]} 
+                    barSize={32}
+                  >
+                    {weeklyData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.total === maxVal && maxVal > 0 ? '#5c59e8' : '#cbdcfd'} 
+                        style={{ 
+                          cursor: 'pointer', 
+                          transition: 'all 0.3s ease',
+                          filter: entry.total === maxVal && maxVal > 0 ? 'drop-shadow(0 6px 12px rgba(92, 89, 232, 0.3))' : 'none'
+                        }}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </section>
 
-          {/* Calendar */}
-          <section className="dashboard-section calendar-section">
-            <div className="calendar-header">
-              <h3>October 2024</h3>
-              <div className="cal-nav">
-                <button>&lt;</button>
-                <button>&gt;</button>
+          {/* Performance Insights (Replaces Calendar) */}
+          <section className="dashboard-section performance-insights-card">
+            <div className="insights-header">
+              <div className="header-label-group">
+                <h3>October totals</h3>
+                <FiChevronDown className="dropdown-icon-mini" />
               </div>
             </div>
-            <div className="calendar-grid">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                <div key={day} className="cal-day-label">{day}</div>
-              ))}
-              {/* Dummy dates for Oct 2024 */}
-              {[29, 30, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((date, i) => (
-                <div 
-                  key={i} 
-                  className={`cal-date ${date === 14 ? 'current' : ''} ${i < 2 ? 'prev-month' : ''}`}
-                >
-                  {date}
+            
+            <div className="insights-summary-row">
+              <div className="days-count">
+                <span className="big-number">14</span>
+                <span className="unit-label">Days</span>
+              </div>
+              <div className="completion-badge-premium">
+                <div className="check-circles">
+                  <div className="circle-outline"></div>
+                  <div className="circle-filled"><FiCheck /></div>
                 </div>
-              ))}
+                <span className="badge-text">Completed</span>
+              </div>
+            </div>
+
+            <div className="activity-grid-premium">
+              <div className="days-header-row">
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, idx) => <span key={`${d}-${idx}`}>{d}</span>)}
+              </div>
+              <div className="dots-grid">
+                {[...Array(28)].map((_, i) => (
+                  <div key={i} className={`activity-dot ${[7, 10, 14, 17, 18, 20, 21, 22, 23, 24, 25, 26].includes(i) ? 'active' : ''}`}>
+                    {[10, 14, 21, 24, 25, 26].includes(i) && <span className="dot-val">{Math.floor(Math.random() * 3) + 1}</span>}
+                    {i === 18 && (
+                      <div className="special-dot">
+                        <span className="special-val">3/3</span>
+                        <FiChevronDown className="special-arrow" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         </div>

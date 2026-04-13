@@ -78,27 +78,27 @@ const UserDashboard = ({ onLogout }) => {
 
 
   return (
-    <div className="dashboard-layout">
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        closeSidebar={closeSidebar} 
+    <div className="dashboard-root">
+      <Navbar 
+        toggleSidebar={toggleSidebar} 
         onLogout={onLogout} 
+        user={userProfile} 
+        setUser={setUserProfile} 
+        showToast={showToast}
         activeView={activeView}
-        setActiveView={setActiveView}
-        openTaskPanel={openTaskPanel}
       />
-      <div className="main-content-wrapper">
-        <Navbar 
-          toggleSidebar={toggleSidebar} 
+      <div className="dashboard-layout">
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          closeSidebar={closeSidebar} 
           onLogout={onLogout} 
-          user={userProfile} 
-          setUser={setUserProfile} 
-          showToast={showToast}
           activeView={activeView}
+          setActiveView={setActiveView}
+          openTaskPanel={openTaskPanel}
         />
         <main className="main-content">
           {activeView === 'dashboard' ? (
-            <Dashboard user={userProfile} />
+            <Dashboard user={userProfile} setActiveView={setActiveView} />
           ) : activeView === 'tasks' ? (
             <Task 
               isPanelOpen={isTaskPanelOpen} 

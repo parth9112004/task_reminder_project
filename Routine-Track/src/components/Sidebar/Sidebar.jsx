@@ -24,9 +24,7 @@ const Sidebar = ({ isOpen, closeSidebar, onLogout, activeView, setActiveView, op
         onClick={closeSidebar}
       />
       <aside className={`dash-sidebar ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h2 className="logo-text">Routine Tracker</h2>
-        </div>
+        <div className="sidebar-spacer"></div>
         
         <nav className="sidebar-menu">
           {menuItems.map(item => (
@@ -43,13 +41,17 @@ const Sidebar = ({ isOpen, closeSidebar, onLogout, activeView, setActiveView, op
             </a>
           ))}
         </nav>
+
+        {activeView === 'tasks' && (
+          <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+            <button className="btn-primary" onClick={openTaskPanel}>
+              <FiPlus />
+              <span>New Task</span>
+            </button>
+          </div>
+        )}
         
         <div className="sidebar-bottom">
-          <button className="btn-primary" onClick={openTaskPanel}>
-            <FiPlus />
-            <span>New Task</span>
-          </button>
-          
           <div className="footer-links">
             <div className="footer-link">
               <FiHelpCircle className="menu-icon" />

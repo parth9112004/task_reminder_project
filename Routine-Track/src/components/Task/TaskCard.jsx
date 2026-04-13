@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiClock, FiMoreVertical, FiEdit2, FiTrash2, FiHeart } from 'react-icons/fi';
+import { FiClock, FiMoreVertical, FiEdit2, FiTrash2, FiHeart, FiCheckCircle } from 'react-icons/fi';
 
 /**
  * TaskCard Component
  * Displays individual task summary with interactive menu
  */
-const TaskCard = ({ task, onEdit, onDelete }) => {
+const TaskCard = ({ task, onEdit, onDelete, onUpdateStatus, onToggleFavourite }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -18,7 +18,7 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
   };
 
   const getStatusClass = (status) => {
-    return status?.toLowerCase().replace(' ', '-') || 'to-do';
+    return status?.toLowerCase().replace(' ', '-') || 'pending';
   };
 
   useEffect(() => {
@@ -32,9 +32,9 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
   }, []);
 
   return (
-    <div className="task-card-v2" onClick={() => onEdit(task)}>
+    <div className={`task-card-v2 ${task.favourite ? 'is-favourite' : ''}`} onClick={() => onEdit(task)}>
       <div className="task-card-main">
-        <div className={`priority-indicator ${getPriorityClass(task.priority)}`}></div>
+        <div className={`priority-indicator status-${getStatusClass(task.status)}`}></div>
         <div className="task-content">
           <h3>{task.title}</h3>
           <div className="task-meta">
@@ -46,6 +46,7 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
         </div>
       </div>
       <div className="task-card-actions">
+        {task.favourite && <FiHeart className="fav-active-icon" />}
         {task.priority === 'High' && <span className="urgent-badge">High Priority</span>}
         
         <div className="more-menu-container" ref={menuRef}>
@@ -64,10 +65,13 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
               <div className="menu-item-v2" onClick={(e) => { e.stopPropagation(); onEdit(task); setShowMenu(false); }}>
                 <FiEdit2 /> Edit
               </div>
+              <div className={`menu-item-v2 done ${task.status === 'Done' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); onUpdateStatus(task.id, 'Done'); setShowMenu(false); }}>
+                <FiCheckCircle /> Done
+              </div>
               <div className="menu-item-v2 delete" onClick={(e) => { e.stopPropagation(); onDelete(task); setShowMenu(false); }}>
                 <FiTrash2 /> Delete
               </div>
-              <div className="menu-item-v2 fav" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
+              <div className={`menu-item-v2 fav ${task.favourite ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); onToggleFavourite(task.id); setShowMenu(false); }}>
                 <FiHeart /> Favourite
               </div>
             </div>

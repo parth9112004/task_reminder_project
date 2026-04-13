@@ -7,10 +7,7 @@ const Navbar = ({ toggleSidebar, onLogout, user, setUser, showToast, activeView 
   const dropdownRef = useRef(null);
   const profileRef = useRef(null);
 
-  const getPageTitle = () => {
-    if (!activeView) return 'Overview';
-    return activeView.charAt(0).toUpperCase() + activeView.slice(1);
-  };
+
 
   const toggleDropdown = () => {
     setIsDropdownOpen(prev => !prev);
@@ -40,7 +37,15 @@ const Navbar = ({ toggleSidebar, onLogout, user, setUser, showToast, activeView 
         <button className="mobile-toggle" onClick={toggleSidebar}>
           <FiMenu />
         </button>
-        <h1 className="page-title">{getPageTitle()}</h1>
+        <div className="nav-logo-brand">
+          <div className="logo-premium-box">
+            <span className="rt-icon">RT</span>
+          </div>
+          <h2 className="logo-text">
+            <span className="logo-accent">R</span>outine <span className="logo-accent">T</span>racker
+          </h2>
+        </div>
+
       </div>
       
       <div className="nav-center">

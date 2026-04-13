@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiGrid } from 'react-icons/fi';
 import TaskForm from './TaskForm';
 
 /**
@@ -13,7 +13,7 @@ const TaskPanel = ({ isOpen, onClose, onSave, taskToEdit }) => {
     date: '',
     time: '',
     priority: 'Medium',
-    status: 'To Do',
+    status: 'Pending',
     reminder: false,
     notifications: { alert: true, sound: false, popup: true }
   });
@@ -28,7 +28,7 @@ const TaskPanel = ({ isOpen, onClose, onSave, taskToEdit }) => {
         date: '',
         time: '',
         priority: 'Medium',
-        status: 'To Do',
+        status: 'Pending',
         reminder: false,
         notifications: { alert: true, sound: false, popup: true }
       });

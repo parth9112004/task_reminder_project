@@ -69,7 +69,11 @@ const AccountDropdown = ({ isOpen, setIsOpen, dropdownRef, user, setUser, showTo
   if (!isOpen) return null;
 
   return (
-    <div className="account-dropdown" ref={dropdownRef}>
+    <div className="account-dropdown premium-dropdown" ref={dropdownRef}>
+      <button className="modal-close-btn" onClick={() => setIsOpen(false)}>
+        <FiX />
+      </button>
+
       <div className="dropdown-header">
         <div className="profile-img-container" onClick={handleImageClick}>
           {user.profileImg ? (
@@ -97,7 +101,7 @@ const AccountDropdown = ({ isOpen, setIsOpen, dropdownRef, user, setUser, showTo
       </div>
 
       <div className="dropdown-form-modern">
-        <div className="form-row">
+        <div className="form-grid-row">
           <div className="input-group-modern">
             <label>First Name</label>
             <input 
@@ -105,7 +109,7 @@ const AccountDropdown = ({ isOpen, setIsOpen, dropdownRef, user, setUser, showTo
               name="first_name"
               value={user.first_name} 
               onChange={handleInputChange}
-              placeholder="Enter first name"
+              placeholder="parth"
             />
           </div>
           <div className="input-group-modern">
@@ -115,7 +119,7 @@ const AccountDropdown = ({ isOpen, setIsOpen, dropdownRef, user, setUser, showTo
               name="last_name"
               value={user.last_name} 
               onChange={handleInputChange}
-              placeholder="Enter last name"
+              placeholder="makwana"
             />
           </div>
         </div>
@@ -127,12 +131,12 @@ const AccountDropdown = ({ isOpen, setIsOpen, dropdownRef, user, setUser, showTo
             name="bio"
             value={user.bio}
             onChange={handleInputChange}
-            placeholder="Manager / Developer / etc."
+            placeholder="Lead Manager"
           />
         </div>
       </div>
 
-      <button className="btn-save-modern" onClick={handleSave} disabled={isLoading}>
+      <button className="btn-save-modern premium-btn" onClick={handleSave} disabled={isLoading}>
         {isLoading ? (
           <div className="loader-small"></div>
         ) : saveStatus === 'success' ? (

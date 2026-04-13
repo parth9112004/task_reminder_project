@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiHeart } from 'react-icons/fi';
 import TaskList from './TaskList';
 import TaskPanel from './TaskPanel';
 import DeleteModal from './DeleteModal';
@@ -14,6 +14,7 @@ const Task = ({ isPanelOpen, setIsPanelOpen }) => {
   const [tasks, setTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [showFavouritesOnly, setShowFavouritesOnly] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   
   // Modal states
@@ -21,20 +22,34 @@ const Task = ({ isPanelOpen, setIsPanelOpen }) => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
-  useEffect(() => {
-    setTasks(taskApi.getTasks());
-  }, []);
-
-  const handleSaveTask = (formData) => {
-    if (formData.id) {
-      const updated = taskApi.updateTask(formData);
-      setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
-    } else {
-      const newTask = taskApi.addTask(formData);
-      setTasks(prev => [...prev, newTask]);
+  const fetchTasksAndStats = async (filterStatus = activeFilter) => {
+    try {
+      const data = await taskApi.getTasks(filterStatus);
+      setTasks(data);
+      // Call stats API alongside tasks as required to ensure everything stays in sync
+      await taskApi.getStats();
+    } catch (error) {
+      console.error("Failed to sync tasks:", error);
     }
-    setIsPanelOpen(false);
-    setEditingTask(null);
+  };
+
+  useEffect(() => {
+    fetchTasksAndStats(activeFilter);
+  }, [activeFilter]);
+
+  const handleSaveTask = async (formData) => {
+    try {
+      if (formData.id) {
+        await taskApi.updateTask(formData);
+      } else {
+        await taskApi.addTask(formData);
+      }
+      await fetchTasksAndStats();
+      setIsPanelOpen(false);
+      setEditingTask(null);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleEditClick = (task) => {
@@ -47,39 +62,67 @@ const Task = ({ isPanelOpen, setIsPanelOpen }) => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (taskToDelete) {
-      taskApi.deleteTask(taskToDelete.id);
-      setTasks(prev => prev.filter(t => t.id !== taskToDelete.id));
-      setIsDeleteModalOpen(false);
-      setTaskToDelete(null);
-      setIsSuccessModalOpen(true);
+      try {
+        await taskApi.deleteTask(taskToDelete.id);
+        await fetchTasksAndStats();
+        setIsDeleteModalOpen(false);
+        setTaskToDelete(null);
+        setIsSuccessModalOpen(true);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleUpdateStatus = async (taskId, newStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      try {
+        await taskApi.updateTask({ ...task, status: newStatus });
+        await fetchTasksAndStats();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleToggleFavourite = async (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      try {
+        // Assume API accepts `favourite` boolean properly based on taskApi normalization
+        await taskApi.updateTask({ ...task, favourite: !task.favourite });
+        await fetchTasksAndStats();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const getPageTitle = () => {
+    if (showFavouritesOnly) return 'Favourite Tasks';
+    switch (activeFilter) {
+      case 'Pending': return 'Pending Tasks';
+      case 'In Progress': return 'In Progress Tasks';
+      case 'Done': return 'Complete Tasks';
+      default: return 'All Tasks';
     }
   };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = activeFilter === 'All' || task.status === activeFilter;
-    return matchesSearch && matchesFilter;
+    const matchesFavourite = !showFavouritesOnly || task.favourite;
+    return matchesSearch && matchesFavourite;
   });
 
   return (
     <div className="task-page-wrapper">
       <header className="task-page-header">
-        <div className="header-left">
-          <div className="task-search">
-            <FiSearch className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search your tasks..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="header-right">
+        <div className="header-left-v2">
           <div className="filter-chips">
-            {['All', 'To Do', 'In Progress', 'Done'].map(filter => (
+            {['All', 'Pending', 'In Progress', 'Done'].map(filter => (
               <button 
                 key={filter} 
                 className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
@@ -90,13 +133,34 @@ const Task = ({ isPanelOpen, setIsPanelOpen }) => {
             ))}
           </div>
         </div>
+        <div className="header-right-v2">
+          <div className="task-search">
+            <FiSearch className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search your tasks..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button 
+            className={`fav-filter-btn ${showFavouritesOnly ? 'active' : ''}`}
+            onClick={() => setShowFavouritesOnly(!showFavouritesOnly)}
+            title="Show Favourites"
+          >
+            <FiHeart />
+          </button>
+        </div>
       </header>
 
       <main className="task-page-body">
         <TaskList 
+          title={getPageTitle()}
           tasks={filteredTasks} 
           onTaskClick={handleEditClick} 
           onDeleteTask={handleDeleteRequest}
+          onUpdateStatus={handleUpdateStatus}
+          onToggleFavourite={handleToggleFavourite}
         />
       </main>
 
